@@ -1,0 +1,11 @@
+certifi==2024.8.30
+charset-normalizer==3.4.0
+configparser==7.1.0
+idna==3.10
+ifaddr==0.2.0
+kodi-json==1.0.0
+requests==2.32.3
+urllib3==2.2.3
+xbmc-client==0.3.0
+xbmc-json==0.3.2
+zeroconf==0.135.0

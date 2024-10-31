@@ -1,0 +1,17 @@
+version: '3.6'
+
+services:
+  satipplaylist:
+    image: satipplaylist
+    container_name: satipplaylist
+    ports:
+      - 8075:8000
+
+    build: .
+    volumes:
+      - /etc/localtime:/etc/localtime
+      - ./satipPlaylistName-backup:/app/python/volumes/backup
+      - ./satipPlaylistName-runtime:/app/python/volumes/runtime
+    restart: always
+    environment:
+      - TZ=Europe/Berlin
