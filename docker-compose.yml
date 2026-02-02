@@ -11,5 +11,6 @@ services:
       - ./simpleTV-backup:/app/python/volumes/backup
       - ./simpleTV-runtime:/app/python/volumes/runtime
     restart: always
+    network_mode: "host"
     environment:
       - TZ=Europe/Berlin

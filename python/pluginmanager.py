@@ -55,7 +55,7 @@ class PluginManager:
                         module_spec.loader.exec_module(my_module)
                         plugin_id = my_module.SplPlugin.plugin_id
                         if not plugin_id in config_plugins:  # new module
-                            config_plugins[plugin_id] = {"active": False}
+                            config_plugins[plugin_id] = {"active": True}
                             new_plugins_found = True
                             continue
                         if not config_plugins[plugin_id]["active"]:

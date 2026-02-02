@@ -10,7 +10,7 @@ from messagehandler import Query
 import defaults
 from splthread import SplThread
 from jsonstorage import JsonStorage
-
+import threading
 
 # Non standard modules (install with pip)
 
@@ -54,6 +54,8 @@ class SplPlugin(SplThread):
             },
         )  # set defaults
 
+        self.lock = threading.Lock()  # create a lock, only if necessary
+
         # at last announce the own plugin
         super().__init__(modref.message_handler, self)
         modref.message_handler.add_event_handler(self.plugin_id, 0, self.event_listener)
@@ -95,6 +97,8 @@ class SplPlugin(SplThread):
         """starts the server"""
         while self.runFlag:
             time.sleep(10)
+            with self.lock:
+                pass
 
     def _stop(self):
         self.runFlag = False
