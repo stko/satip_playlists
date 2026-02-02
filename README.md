@@ -16,19 +16,19 @@ Several favorite lists can be configured, so each player can have its individual
 ## Setup
 As the SPL container exposes its configuration files into a local directory, you'll need to find such place first on your docker server. If you have, then cd into it and run
 
-   git clone https://github.com/stko/satip_playlists.git
-   cd satip_playlists
+   git clone https://github.com/stko/simple_tv.git
+   cd simple_tv
    docker compose up --build
 
 SPL now creates the inital config directory structures. End the program straight again with CRTL+C. Now as next activate the plugins by editing 
 
-   sudo nano satipPlaylistName-backup/PluginManager/plugins.json 
+   sudo nano simpleTV-backup/PluginManager/plugins.json 
 
 and set `active`of all plugins to `true`. Restart the container again (`docker compose up`) and stop it again with CRTL+C.
 
 Now you can edit all your favorite settings in 
 
-  sudo nano satipPlaylistName-backup/satipplaylists/config.json
+  sudo nano simpleTV-backup/satipplaylists/config.json
 
 and start SPL finally to run in the background with `docker compose up -d`
 

@@ -29,7 +29,7 @@ RUN bash -c "/tmp/installdockers.sh"
 
 WORKDIR /app/python
 
-CMD [ "python3", "./satip_playlists.py"  ]
+CMD [ "python3", "./simple_tv.py"  ]
 
 
 EXPOSE 8000

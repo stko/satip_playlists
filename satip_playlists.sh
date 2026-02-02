@@ -24,16 +24,16 @@ function stop {
 }
 
 function teststop {
-	echo '🛑 Stopping the satipPlaylistName container '
-	containerid=$(docker ps -q --filter "name=satipPlaylistName")
+	echo '🛑 Stopping the simpleTV container '
+	containerid=$(docker ps -q --filter "name=simpleTV")
 	if [[  -z "containerid" ]]
 	then
-		echo "⚠️ No running satipPlaylistName container found"
+		echo "⚠️ No running simpleTV container found"
 		exit 1
 	fi
-	docker stop satipPlaylistName
+	docker stop simpleTV
 	if [ ! $? -eq 0 ]; then
-		echo '⚠️  Could not stop the satipPlaylistName container'
+		echo '⚠️  Could not stop the simpleTV container'
 	fi
 
 	docker rmi $containerid
@@ -43,11 +43,11 @@ function teststop {
 }
 
 function teststop {
-	echo '🛑 Stopping the satipPlaylistName container '
+	echo '🛑 Stopping the simpleTV container '
 
-	docker stop satipPlaylistName
+	docker stop simpleTV
 	if [ ! $? -eq 0 ]; then
-		echo '⚠️  Could not stop the satipPlaylistName container'
+		echo '⚠️  Could not stop the simpleTV container'
 	fi
 
 }
@@ -55,23 +55,23 @@ function teststop {
 
 function testbuild {
 	teststop
-	echo '🛑 rebuild  the satipPlaylistName container '
-	echo 'Search the satipPlaylistName container '
-	containerid=$(docker ps -qa --filter "name=satipPlaylistName")
+	echo '🛑 rebuild  the simpleTV container '
+	echo 'Search the simpleTV container '
+	containerid=$(docker ps -qa --filter "name=simpleTV")
 	if [[  -z "$containerid" ]]
 	then
-		echo "⚠️ No satipPlaylistName container found"
+		echo "⚠️ No simpleTV container found"
 	else
 		echo "remove the image"
 		docker rmi $containerid
 		if [ ! $? -eq 0 ]; then
-			echo '⚠️  Could not remove the satipPlaylistName image'
+			echo '⚠️  Could not remove the simpleTV image'
 		fi
 	fi
 	echo "Build the image"
-	docker -D build  -t satipPlaylistName .
+	docker -D build  -t simpleTV .
 	if [ ! $? -eq 0 ]; then
-		echo '⚠️  Could not build the satipPlaylistName image'
+		echo '⚠️  Could not build the simpleTV image'
 	else
 		echo '👍  Container successfully build'
 	fi
@@ -79,20 +79,20 @@ function testbuild {
 }
 
 function teststart {
-	containerid=$(docker ps -qa --filter "name=satipPlaylistName")
+	containerid=$(docker ps -qa --filter "name=simpleTV")
 	if [[  -z "$containerid" ]]
 	then
-		echo "⚠️ No satipPlaylistName container found, so create one"
+		echo "⚠️ No simpleTV container found, so create one"
 		docker run -i \
-		--name satipPlaylistName \
-		-v satipPlaylistName-backup:/app/devices/master/volumes/backup \
-		-v satipPlaylistName-runtime:/app/devices/master/volumes/runtime \
-		-v satipPlaylistName-video:/app/devices/master/volumes/videos/record_hd \
+		--name simpleTV \
+		-v simpleTV-backup:/app/devices/master/volumes/backup \
+		-v simpleTV-runtime:/app/devices/master/volumes/runtime \
+		-v simpleTV-video:/app/devices/master/volumes/videos/record_hd \
 		--network=host \
-		satipPlaylistName
+		simpleTV
 	else
 		echo "start existing container"
-		docker start  -i satipPlaylistName
+		docker start  -i simpleTV
 	fi
 }
 
@@ -104,7 +104,7 @@ function fullbackup  {
 		echo "⚠️ no or invalid target directory given!: $1"
 	else
 		echo "start backup: copy .../volumes to $1"
-		docker cp satipPlaylistName:/app/devices/master/volumes "$1"
+		docker cp simpleTV:/app/devices/master/volumes "$1"
 	fi
 }
 
@@ -116,7 +116,7 @@ function fullrestore  {
 		echo "⚠️ no or invalid target directory given!: $1"
 	else
 		echo "start backup: copy  $1 to .../volumes"
-		docker cp "$1" satipPlaylistName:/app/devices/master/volumes
+		docker cp "$1" simpleTV:/app/devices/master/volumes
 	fi
 }
 
@@ -127,7 +127,7 @@ function backup  {
 		echo "⚠️ no or invalid target directory given!: $1"
 	else
 		echo "start backup: copy .../volumes/backup to $1/backup"
-		docker cp satipPlaylistName:/app/devices/master/volumes/backup "$1/backup"
+		docker cp simpleTV:/app/devices/master/volumes/backup "$1/backup"
 	fi
 }
 
@@ -139,7 +139,7 @@ function restore  {
 		echo "⚠️ no or invalid target directory given!: $1"
 	else
 		echo "start backup: copy  $1/backup to .../volumes/backup"
-		docker cp "$1/backup" satipPlaylistName:/app/devices/master/volumes/backup
+		docker cp "$1/backup" simpleTV:/app/devices/master/volumes/backup
 	fi
 }
 
@@ -149,7 +149,7 @@ function update {
 
 	if [[ ! -d ".git" ]]
 	then
-		echo "🛑You have manually downloaded the version of satipPlaylistName.
+		echo "🛑You have manually downloaded the version of simpleTV.
 The automatic update only works with a cloned Git repository.
 Try backing up your settings shutting down all containers with 
 
@@ -157,7 +157,7 @@ docker-compose down --remove orphans
 
 Then copy the current version from GitHub to this folder and run
 
-./satipPlaylistName.sh start.
+./simpleTV.sh start.
 
 Alternatively create a Git clone of the repository."
 		exit 1
@@ -184,7 +184,7 @@ Alternatively create a Git clone of the repository."
 
 function login {
 	echo "login into  existing container"
-	docker exec -it satipPlaylistName /bin/bash
+	docker exec -it simpleTV /bin/bash
 }
 
 
@@ -230,18 +230,18 @@ case "$1" in
 		;;
 	* )
 		cat << EOF
-📺 satipPlaylistName – setup script
+📺 simpleTV – setup script
 —————————————————————————————
 Usage:
-satipPlaylistName.sh update – update to the latest release version
-satipPlaylistName.sh start – run all containers
-satipPlaylistName.sh stop – stop all containers
-satipPlaylistName.sh backup targetdir – backups all config data into targetdir/backup
-satipPlaylistName.sh restore sourcedir – restore all config data from targetdir/backup
-satipPlaylistName.sh fullbackup targetdir – backups all data, also runtime data and videos, into targetdir
-satipPlaylistName.sh fullrestore sourcedir– – restores all data, also runtime data and videos, from targetdir
+simpleTV.sh update – update to the latest release version
+simpleTV.sh start – run all containers
+simpleTV.sh stop – stop all containers
+simpleTV.sh backup targetdir – backups all config data into targetdir/backup
+simpleTV.sh restore sourcedir – restore all config data from targetdir/backup
+simpleTV.sh fullbackup targetdir – backups all data, also runtime data and videos, into targetdir
+simpleTV.sh fullrestore sourcedir– – restores all data, also runtime data and videos, from targetdir
 
-Check https://github.com/stko/satipPlaylistName/ for updates.
+Check https://github.com/stko/simpleTV/ for updates.
 EOF
 		;;
 esac
