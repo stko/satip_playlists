@@ -1,4 +1,4 @@
-FROM debian:buster AS builder
+FROM debian:bookworm AS builder
 
 WORKDIR /app
 
@@ -12,7 +12,7 @@ RUN apt-get update && \
 
 
 #FROM python:3
-FROM python:3-buster
+FROM python:3-bookworm
 
 WORKDIR /app
 COPY static ./static
