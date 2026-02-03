@@ -53,7 +53,8 @@ class SplPlugin(SplThread):
                 },
             },
         )  # set defaults
-
+        self.stations = {}
+        self.last_update = 0
         self.lock = threading.Lock()  # create a lock, only if necessary
 
         # at last announce the own plugin
@@ -106,7 +107,10 @@ class SplPlugin(SplThread):
     # ------ plugin specific routines
 
     def collect_urls(self, sources: list) -> dict:
-        stations = {}
+        new_stations = {}
+        if self.stations and (time.time() - self.last_update) < 3600:  # 1 hour cache
+            return self.stations
+        self.last_update = time.time()
         for source in sources:
             r = requests.get(source)
 
