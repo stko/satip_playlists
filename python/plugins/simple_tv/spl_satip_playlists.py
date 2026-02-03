@@ -65,18 +65,43 @@ class SplPlugin(SplThread):
 
     def event_listener(self, queue_event):
         """try to send simulated answers"""
-        # print("uihandler event handler", queue_event.type, queue_event.user)
-        if queue_event.type == defaults.MSG_SOCKET_xxx:
-            pass
-        if queue_event.type == "_join":
-            print("a web client has connected", queue_event.data)
+        print("satip_playlist event handler", queue_event.type, queue_event.user)
+        if (
+            queue_event.type == defaults.MSG_SOCKET_BROWSER
+        ):  # the websocket has got a query from the websocket
+            browser_message = queue_event.data
+            print("browser message:", browser_message)
+            msg_type = browser_message.get("type", "")
+            msg_data = browser_message.get("config", {})
+            if msg_type == "tvcontrol_get_list":
+                playlists = self.movielist_storage.read("playlists", [])
+                if "room" not in msg_data:
+                    browser_message = {"rooms": list(playlists.keys())}
+                else:
+                    room_name = msg_data["room"]
+                    if room_name in playlists:
+                        sources = self.movielist_storage.read("sources", [])
+                        stations = self.collect_urls(sources)
+                        final_m3u = self.playlist(
+                            stations, playlists[room_name], "json"
+                        )
+                        browser_message = {"stations": final_m3u}
+                    else:
+                        browser_message = {"rooms": list(playlists.keys())}
+                self.modref.message_handler.queue_event(
+                    queue_event.user,
+                    defaults.MSG_SOCKET_MSG,
+                    {"type": "tvcontrol_list_response", "config": browser_message},
+                )
+
         # for further pocessing, do not forget to return the queue event
         return queue_event
 
     def query_handler(self, queue_event, max_result_count):
-        # print("satipplaylists handler query handler", queue_event.type,  queue_event.user, max_result_count)
+        # print("satipplaylists handler query handler",queue_event.type, queue_event.user, max_result_count, queue_event.params)
         if queue_event.type == defaults.QUERY_PLAYLIST:  # wait for defined messages
-            name = queue_event.params.lower()
+            name = queue_event.params["name"].lower()
+            format = queue_event.params["format"]
             sources = self.movielist_storage.read("sources", [])
             playlists = self.movielist_storage.read("playlists", [])
             if name == "stations":  # return
@@ -90,7 +115,7 @@ class SplPlugin(SplThread):
                 return [final_m3u]
             elif name in playlists:
                 stations = self.collect_urls(sources)
-                final_m3u = self.playlist(stations, playlists[name])
+                final_m3u = self.playlist(stations, playlists[name], format)
                 return [final_m3u]
         return ["unknown playlist"]
 
@@ -134,18 +159,24 @@ class SplPlugin(SplThread):
                     station = line
                 else:
                     url = line
-                    stations[name] = {"station": station, "url": url}
-            return stations
+                    new_stations[name] = {"station": station, "url": url}
+            self.stations = new_stations
+        return new_stations
 
-    def playlist(self, stations: dict, playlist_data: hash) -> str:
+    def playlist(
+        self, stations: dict, playlist_data: dict, format: str = "m3u"
+    ) -> str | dict:
         filtered_stations = {}
         for name in playlist_data["stations"]:
             name = name.lower()
             if name in stations:
                 filtered_stations[name] = stations[name]
-        return self.format_m3u(filtered_stations, playlist_data)
+        if format == "json":
+            return filtered_stations
+        else:
+            return self.format_m3u(filtered_stations, playlist_data)
 
-    def format_m3u(self, stations: dict, playlist_data: hash) -> str:
+    def format_m3u(self, stations: dict, playlist_data: dict) -> str:
         new_m3u = ["#EXTM3U"]
         for station_data in stations.values():
             url = station_data["url"]

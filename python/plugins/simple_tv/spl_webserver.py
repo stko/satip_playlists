@@ -115,16 +115,20 @@ class SplPlugin(SplThread):
         )
 
         @self.app.route("/")
+        @self.app.route("/<path:path>")
         def index(path="index.html"):
+            print("Serving path:", path)
+            if not path or path == "/":
+                path = "index.html"
             return send_from_directory(
                 os.path.join(self.config.read("actual_settings")["www_root_dir"], ""),
                 path,
             )
 
-        @self.app.route("/<path:name>/")
+        @self.app.route("/room/<path:name>/")
         def playlist(name):
             playlist = self.modref.message_handler.query(
-                Query(None, defaults.QUERY_PLAYLIST, name)
+                Query(None, defaults.QUERY_PLAYLIST, {"name": name, "format": "m3u"})
             )
             if playlist:
                 return Response(playlist[0], mimetype="text/plain")
@@ -159,6 +163,7 @@ class SplPlugin(SplThread):
                     self.modref.message_handler.queue_event(
                         user.name, defaults.MSG_SOCKET_BROWSER, data
                     )
+                    print("websocket message (test):", data)
                 except Exception as ex:
                     print("message Exception:", str(ex))
                     # self.log_message('%s', 'Invalid JSON')

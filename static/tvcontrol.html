@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+<title>TV Control</title>
+<style>
+  ul {
+    display: table;
+    padding-left: 0;
+    font: 1.5em Candara;
+  }
+
+  li {
+    display: table-row;
+  }
+
+  li>* {
+    display: table-cell;
+    padding: 0 0.5em;
+  }
+
+  li> :first-child::before {
+    content: '•';
+    margin-right: 0.5em;
+  }
+</style>
+
+<body>
+
+  <h1>TV Control</h1>
+
+  <ul id="roomlist"></ul>
+
+  <ul id="channellist"></ul>
+
+
+
+  <script src="./main.js"></script>
+  <script src="./tvcontrol.js"></script>
+</body>
+
+
+</html>
