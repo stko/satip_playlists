@@ -170,7 +170,15 @@ class SplPlugin(SplThread):
         for name in playlist_data["stations"]:
             name = name.lower()
             if name in stations:
-                filtered_stations[name] = stations[name]
+                replaced_url_station = stations[name].copy()
+                replaced_url = replaced_url_station["url"]
+                if "replaces" in playlist_data:
+                    for replace in playlist_data["replaces"]:
+                        replaced_url = replaced_url.replace(
+                            replace["from"], replace["to"]
+                        )
+                replaced_url_station["url"] = replaced_url
+                filtered_stations[name.title()] = replaced_url_station
         if format == "json":
             return filtered_stations
         else:
@@ -180,9 +188,6 @@ class SplPlugin(SplThread):
         new_m3u = ["#EXTM3U"]
         for station_data in stations.values():
             url = station_data["url"]
-            if "replaces" in playlist_data:
-                for replace in playlist_data["replaces"]:
-                    url = url.replace(replace["from"], replace["to"])
             if "adds" in playlist_data:
                 new_m3u += playlist_data["adds"]
 
