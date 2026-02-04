@@ -40,15 +40,15 @@ class TVControl {
         const channel_list = document.getElementById("channellist");
         channel_list.innerHTML = "";
         for (const station_name in data.stations) {
-          let li = document.createElement("li");
-          li.appendChild(document.createElement("station-logo"));
-          const name_elem = document.createElement("station-name");
+          let tr = document.createElement("tr");
+          tr.appendChild(document.createElement("td"));
+          const name_elem = document.createElement("td");
           name_elem.innerText = station_name;
-          li.appendChild(name_elem);
-          li.onclick = () => {
-            messenger.emit('tvcontrol_play_station', { "url": data.stations[station_name].url });
+          name_elem.onclick = () => {
+            messenger.emit('tvcontrol_play_station', { "type": "live", "url": data.stations[station_name].url });
           };
-          channel_list.appendChild(li);
+          tr.appendChild(name_elem);
+          channel_list.appendChild(tr);
         }
       }
     }
@@ -64,6 +64,7 @@ class TVControl {
   messenger_onWSClose() {
   }
 
+  mediathek() { }
 }
 
 const remotecontrol = new TVControl()
