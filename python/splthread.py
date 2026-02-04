@@ -27,12 +27,12 @@ class SplThread(metaclass=ABCMeta):
         pass
 
     @abstractmethod
-    def event_listener(self, queue_event):
+    def event_listener(self, queue_event) -> dict:
         """handler for system events"""
         pass
 
     @abstractmethod
-    def query_handler(self, queue_event, max_result_count):
+    def query_handler(self, queue_event, max_result_count) -> list:
         """handler for system queries"""
         pass
 
