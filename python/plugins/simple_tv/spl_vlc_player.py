@@ -55,7 +55,7 @@ class SplPlugin(SplThread):
             print("browser message:", browser_message)
             msg_type = browser_message.get("type", "")
             msg_data = browser_message.get("config", {})
-            if msg_type == "tvcontrol_play_station":
+            if msg_type == defaults.MSG_TVCONTROL_PLAY_STATION:
                 with self.lock:
                     self.url_toplay = msg_data.get("url", "")
                 """
@@ -65,12 +65,21 @@ class SplPlugin(SplThread):
                     {"type": "tvcontrol_list_response", "config": browser_message},
                 )
                 """
+        if queue_event.type == defaults.MSG_TVCONTROL_PLAY_STATION:
+            with self.lock:
+                self.url_toplay = queue_event.data.get("url", "")
+                print("Received URL to play:", self.url_toplay)
+        if queue_event.type == defaults.MSG_TVCONTROL_SWITCH_VIDEOTEXT_PAGE:
+            page = queue_event.data.get("page", 0)
+            print("Received request to switch to videotext page:", page)
+            if self.player:
+                self.player.video_set_teletext(page)
         # for further pocessing, do not forget to return the queue event
         return queue_event
 
     def query_handler(self, queue_event, max_result_count) -> list:
         # print("satipplaylists handler query handler",queue_event.type, queue_event.user, max_result_count, queue_event.params)
-        if queue_event.type == defaults.MESSAGE_XXXX:  # wait for defined messages
+        if queue_event.type == defaults.MSG_SOCKET_xxx:  # wait for defined messages
             pass
         return []
 
@@ -82,9 +91,12 @@ class SplPlugin(SplThread):
                 # as https://github.com/blacklight/platypush/commit/833f810d4b14bbd9ee967a9ef3642aa0f6f9ced2 stated:
                 # VLC is not thread safe, so we have to ensure that all calls to VLC are done from the same thread
                 if self.url_toplay:
-                    if self.player is None:
+                    if (
+                        self.player is None
+                    ):  # create a new player instance for each new URL, as VLC is not thread safe
                         self.player = self.vlc_instance.media_player_new()
                     else:
+                        # self.player.pause()  # pause current playback
                         self.player.stop()
                         # self.player.set_pause(1)  # pause current playback
                         # time.sleep(0.2)

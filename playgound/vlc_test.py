@@ -1,12 +1,20 @@
 import time
 import vlc
 
+instance = vlc.Instance()
+player = instance.media_player_new()
+""" 
 player = vlc.MediaPlayer(
     "satip://megasat/?src=1&freq=11494&pol=h&ro=0.35&msys=dvbs2&mtype=8psk&plts=on&sr=22000&fec=23&pids=0,17,18,5100,5101,5102,5104"
 )
 
+ """
 if player:
     print("VLC media player instance created successfully.")
+    media = instance.media_new(
+        "satip://megasat/?src=1&freq=11494&pol=h&ro=0.35&msys=dvbs2&mtype=8psk&plts=on&sr=22000&fec=23&pids=0,17,18,5100,5101,5102,5104"
+    )
+    player.set_media(media)
     player.play()
     time.sleep(5)
     player.pause()

@@ -101,7 +101,7 @@ class SplPlugin(SplThread):
         # print("satipplaylists handler query handler",queue_event.type, queue_event.user, max_result_count, queue_event.params)
         if queue_event.type == defaults.QUERY_PLAYLIST:  # wait for defined messages
             name = queue_event.params["name"].lower()
-            format = queue_event.params["format"]
+            list_format = queue_event.params["format"]
             sources = self.movielist_storage.read("sources", [])
             playlists = self.movielist_storage.read("playlists", [])
             if name == "stations":  # return
@@ -115,7 +115,7 @@ class SplPlugin(SplThread):
                 return [final_m3u]
             elif name in playlists:
                 stations = self.collect_urls(sources)
-                final_m3u = self.playlist(stations, playlists[name], format)
+                final_m3u = self.playlist(stations, playlists[name], list_format)
                 return [final_m3u]
         return ["unknown playlist"]
 
