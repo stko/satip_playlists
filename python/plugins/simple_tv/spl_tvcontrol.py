@@ -43,6 +43,8 @@ class SplPlugin(SplThread):
         )  # set defaults
         self.playlist = []
         self.videotext = 0
+        self.channel = 0
+        self.num_channels = 0
         # self.lock = threading.Lock()  # create a lock, only if necessary
 
         # at last announce the own plugin
@@ -90,6 +92,30 @@ class SplPlugin(SplThread):
                     print("Switched to normal mode")
                     self.videotext = 0
                 self.switch_videotext_page(self.videotext)
+            if input_special == "right":
+                if self.videotext:
+                    self.videotext += 1
+                    print("Switched to next videotext page:", self.videotext)
+                    self.switch_videotext_page(self.videotext)
+                else:
+                    self.channel += 1
+                    if self.channel > self.num_channels:
+                        self.channel = 1
+                    print("Switched to next channel:", self.channel)
+                    self.switch_station(self.channel)
+
+            if input_special == "left":
+                if self.videotext:
+                    if self.videotext > 100:
+                        self.videotext -= 1
+                        print("Switched to previous videotext page:", self.videotext)
+                        self.switch_videotext_page(self.videotext)
+                else:
+                    self.channel -= 1
+                    if self.channel < 1:
+                        self.channel = self.num_channels
+                    print("Switched to previous channel:", self.channel)
+                    self.switch_station(self.channel)
 
         # for further pocessing, do not forget to return the queue event
         return queue_event
@@ -123,25 +149,28 @@ class SplPlugin(SplThread):
             },
         )
         self.playlist = self.modref.message_handler.query(query)
-        if (
-            self.playlist
-            and isinstance(self.playlist, list)
-            and 0
-            <= input_num
-            < len(
+        if self.playlist and isinstance(self.playlist, list):
+            self.num_channels = len(
                 self.playlist[0]
-            )  # the query result is a list of results, we need the first one, which should be the playlist, and check if the input number is within the range of the playlist
-        ):
-            station_name = list(self.playlist[0].keys())[input_num]
-            station = self.playlist[0][
-                station_name
-            ]  # get the station at the index of the input number
-            print("Selected station:", station)
-            self.modref.message_handler.queue_event(
-                None,
-                defaults.MSG_TVCONTROL_PLAY_STATION,
-                {"url": station.get("url", "")},
-            )
+            )  # assuming the playlist is a list of dicts
+            if (
+                0
+                <= input_num
+                < self.num_channels  # the query result is a list of results, we need the first one, which should be the playlist, and check if the input number is within the range of the playlist
+            ):
+                self.channel = (
+                    input_num + 1
+                )  # store the current channel, convert back to one-based index for display
+                station_name = list(self.playlist[0].keys())[input_num]
+                station = self.playlist[0][
+                    station_name
+                ]  # get the station at the index of the input number
+                print("Selected station:", station)
+                self.modref.message_handler.queue_event(
+                    None,
+                    defaults.MSG_TVCONTROL_PLAY_STATION,
+                    {"url": station.get("url", "")},
+                )
 
     def switch_videotext_page(self, input_num):
         print("Switching to videotext page:", input_num)
