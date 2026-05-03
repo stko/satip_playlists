@@ -85,7 +85,7 @@ class SplPlugin(SplThread):
                         final_m3u = self.playlist(
                             stations, playlists[room_name], "json"
                         )
-                        browser_message = {"stations": final_m3u}
+                        browser_message = {"livetv": final_m3u}
                     else:
                         browser_message = {"rooms": list(playlists.keys())}
                 self.modref.message_handler.queue_event(
@@ -178,6 +178,7 @@ class SplPlugin(SplThread):
                             replace["from"], replace["to"]
                         )
                 replaced_url_station["url"] = replaced_url
+                replaced_url_station["name"] = name.title()
                 filtered_stations[name.title()] = replaced_url_station
         if format == "json":
             return filtered_stations

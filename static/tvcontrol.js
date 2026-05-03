@@ -36,18 +36,29 @@ class TVControl {
           };
           room_list.appendChild(li);
         });
-      } else if (data.stations) {
+      } else if (data.livetv) {
         const channel_list = document.getElementById("channellist");
         channel_list.innerHTML = "";
-        for (const station_name in data.stations) {
-          let tr = document.createElement("tr");
-          tr.appendChild(document.createElement("td"));
-          const name_elem = document.createElement("td");
-          name_elem.innerText = station_name;
-          name_elem.onclick = () => {
-            messenger.emit('tvcontrol_play_station', { "type": "live", "url": data.stations[station_name].url });
+        var channel_counter = 0;
+        for (const channel_name in data.livetv) {
+          channel_counter += 1;
+          const channel = data.livetv[channel_name];
+          const tr = document.createElement("tr");
+          var td_elem = document.createElement("td");
+          td_elem.innerText = String(channel_counter);
+          td_elem.classList.add("tv-channel-number");
+          tr.appendChild(td_elem);
+          td_elem = document.createElement("td")
+          td_elem.innerHTML = "&#9654;";
+          td_elem.onclick = () => {
+            messenger.emit('tvcontrol_play_station', { "type": "live", "url": channel.url });
           };
-          tr.appendChild(name_elem);
+          td_elem.classList.add("tv-play-button");
+          tr.appendChild(td_elem);
+          td_elem = document.createElement("td")
+          td_elem.innerText = channel.name;
+          td_elem.classList.add("tv-channel-name");
+          tr.appendChild(td_elem);
           channel_list.appendChild(tr);
         }
       }
@@ -65,6 +76,10 @@ class TVControl {
   }
 
   mediathek() { }
+
+  power_on_off() {
+    messenger.emit('tvcontrol_power_switch', {});
+  }
 }
 
 const remotecontrol = new TVControl()
