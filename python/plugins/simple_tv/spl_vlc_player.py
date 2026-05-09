@@ -41,7 +41,9 @@ class SplPlugin(SplThread):
         self.run_flag = True
 
         # do any further initialisation here
-        self.vlc_instance = vlc.Instance()
+        self.vlc_instance = vlc.Instance(
+            ["--vbi-opaque", "--aout=alsa", "--fullscreen"]
+        )  # create a VLC instance with HTTP interface enabled, set a password for security
         self.player = None
         self.url_toplay = ""
 

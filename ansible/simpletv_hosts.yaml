@@ -1,0 +1,6 @@
+simpletv_devices:
+  hosts:
+    rpi4-simpletv:
+      ansible_user: pi
+      ansible_password: raspberry
+      ansible_ssh_port: 22

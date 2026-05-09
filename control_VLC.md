@@ -74,3 +74,6 @@ Und vielleicht die Endlösung??
 
 https://pypi.org/project/python-vlc/
 
+
+ein paar Infos zu den cli- Parametern: https://forums.raspberrypi.com/viewtopic.php?t=386007
+

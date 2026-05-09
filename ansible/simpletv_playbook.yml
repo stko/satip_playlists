@@ -1,0 +1,190 @@
+---
+- name: Deploy SimpleTV on Raspberry Pi
+  hosts: simpletv_devices
+  become: yes
+
+
+
+  vars:
+    user: pi
+    home_dir: "/home/pi"
+    simpletv_dir: "{{ home_dir }}/simpletv"
+    docker_compose_version: "v2.23.3"
+    ansible_python_interpreter: /usr/bin/python3
+
+
+  tasks:
+
+    #disable while testing & debugging
+    - name: Update & upgrade packages
+      apt:
+        update_cache: yes
+        upgrade: dist
+        cache_valid_time: 3600
+
+
+    - name: Install required packages
+      apt:
+        name:
+          - git
+          - python3-venv
+          - python3-pip
+          - python3-virtualenv
+          - libxml2-dev
+          - libxslt1-dev
+          - python3-flask-sockets
+          - python3-setuptools
+          - python3-wheel
+          - vlc
+          - lightdm
+          - xserver-xorg
+          - x11-xserver-utils
+          - xinit
+          - openbox
+        state: present
+
+# setup Xserver with openbox as window manager, so that we can run the web interface in kiosk mode
+
+#wie starten wir den Xserver automatisch mit openbox als window manager, damit die weboberfläche im kiosk modus gestartet werden kann?
+#so wie in https://raspberrypi.stackexchange.com/a/92199 als rc.local oder systemd service?
+
+    - name: Create .xinitrc file for user {{ user }}
+      copy:
+        dest: "{{ home_dir }}/.xinitrc"
+        content: |
+          #!/bin/sh
+          exec openbox-session
+        owner: "{{ user }}"
+        group: "{{ user }}"
+        mode: '0755'
+
+
+    - name: Create openbox autostart file for user {{ user }}
+      copy:
+        dest: /etc/xdg/openbox/autostart
+        content: |
+          xset s off
+          xset -dpms
+          xset s noblank
+        owner: "{{ user }}"
+        group: "{{ user }}"
+        mode: '0755'
+
+
+
+    - name: ensures {{ simpletv_dir }} dir exists
+      file: 
+        path: "{{ simpletv_dir }}"
+        state: directory
+      become: yes
+      become_user: '{{ user }}'
+
+
+
+    - name: ensures {{ simpletv_dir }} volumes/backup exists
+      file: 
+        path: "{{ simpletv_dir }}/volumes/backup"
+        state: directory
+      become: yes
+      become_user: '{{ user }}'
+
+
+
+
+# copy the simpletv code to the raspberry pi, we can use git clone or copy the files directly, depending on your preference and setup
+# https://stackoverflow.com/a/62116709/1927807
+
+    - name: Copy SimpleTV code to Raspberry Pi
+      copy:
+        src: "{{ item }}"
+        dest: "{{ simpletv_dir }}"
+        owner: "{{ user }}"
+        group: "{{ user }}"
+        mode: '0755'
+      become: yes
+      become_user: '{{ user }}'
+      with_fileglob: # fileglob only works on pattern, but not on directories, so we need to copy the files and directories separately, we can use with_fileglob for the files and with_items for the directories
+        - "../python/*.py"
+        - "../python/*.json"
+
+
+    - name: Copy SimpleTV code to Raspberry Pi
+      copy:
+        src: "{{ item }}"
+        dest: "{{ simpletv_dir }}"
+        owner: "{{ user }}"
+        group: "{{ user }}"
+        mode: '0755'
+      become: yes
+      become_user: '{{ user }}'
+      with_items:
+        - "../python/requirements.txt"
+        - "../python/plugins"
+        - "../python/common"
+        - "../static"
+
+  # copy some config files
+    - name: Copy config files to Raspberry Pi
+      copy:
+        src: "./files/"
+        dest: "{{ simpletv_dir }}/volumes/backup"
+        owner: "{{ user }}"
+        group: "{{ user }}"
+        mode: '0755'
+      become: yes
+      become_user: '{{ user }}'
+
+
+    - name: Install Python dependencies
+      ansible.builtin.pip:
+        requirements: "{{ simpletv_dir }}/requirements.txt"
+        virtualenv: "{{ simpletv_dir }}/.venv"
+        virtualenv_python: python3
+        virtualenv_site_packages: yes
+        extra_args: --no-cache-dir
+      become: yes
+      become_user: '{{ user }}'
+      register: pip_result
+
+# https://raspberrypi.stackexchange.com/a/135457 (B2 = console autologin, B4 = desktop autologin)
+    - name: enable GUI auto login
+      become: true
+      ansible.builtin.command: raspi-config nonint do_boot_behaviour B4
+
+# 
+    - name: set audio output to HDMI 0
+      become: true
+      ansible.builtin.command: raspi-config nonint do_audio 1
+ 
+ # create a GUI system service to start the Xserver with openbox and the web interface in kiosk mode on boot
+ # https://unix.stackexchange.com/a/732870
+
+    - name: Configure SimpleTV systemd service
+      copy:
+        dest: /etc/systemd/system/simpletv.service
+        content: |
+          [Unit]
+          Description=SimpleTV Gui Service
+          PartOf=graphical-session.target
+          After=graphical-session.target
+
+          [Service]
+          Type=exec
+          ExecStart={{ simpletv_dir }}/.venv/bin/python simpletv.py
+          Environment=DISPLAY=:0
+          WorkingDirectory={{ simpletv_dir }}
+          Restart=always
+          User={{ user }}
+
+          [Install]
+          WantedBy=graphical-session.target
+
+
+
+    - name: Enable SimpleTV service
+      systemd:
+        name: simpletv.service
+        enabled: yes
+        state: started
+
+

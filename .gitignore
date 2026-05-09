@@ -3,7 +3,7 @@
 # certificates
 *.pem
 # configs
-*.json
+python/**.json
 # downloads
 *.gz
 # temp files

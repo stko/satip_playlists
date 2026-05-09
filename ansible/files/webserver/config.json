@@ -1,0 +1,12 @@
+{
+    "actual_settings": {
+        "www_root_dir": "/home/pi/simpletv/static"
+    },
+    "server_config": {
+        "credentials": "",
+        "host": "0.0.0.0",
+        "openbrowser": false,
+        "port": 8000,
+        "secure": false
+    }
+}

@@ -1,0 +1,4 @@
+{
+    "input_delay": 1,
+    "input_device": "/dev/input/by-id/usb-USB_Composite_Device_USB_Composite_Device_0001-event-kbd"
+}
