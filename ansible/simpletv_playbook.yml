@@ -43,29 +43,31 @@
           - openbox
         state: present
 
-# setup Xserver with openbox as window manager, so that we can run the web interface in kiosk mode
-
-#wie starten wir den Xserver automatisch mit openbox als window manager, damit die weboberfläche im kiosk modus gestartet werden kann?
-#so wie in https://raspberrypi.stackexchange.com/a/92199 als rc.local oder systemd service?
+#  Kiosk mode via systemd didn't work, so we will use the startx method instead, which is more reliable and easier to set up, but it requires a user to be logged in, so we will set up auto login for the user pi, and then startx will be executed on login, which will start the Xserver and the web interface in kiosk mode
+# https://superuser.com/q/1645902
 
     - name: Create .xinitrc file for user {{ user }}
       copy:
         dest: "{{ home_dir }}/.xinitrc"
         content: |
           #!/bin/sh
-          exec openbox-session
+          #exec openbox-session
+          while true; do
+            cd /home/pi/simpletv
+            export DISPLAY=:0
+            /home/pi/simpletv/.venv/bin/python simpletv.py
+          done
+
         owner: "{{ user }}"
         group: "{{ user }}"
         mode: '0755'
 
 
-    - name: Create openbox autostart file for user {{ user }}
+    - name: Create startx autostart file for user {{ user }} at console login
       copy:
-        dest: /etc/xdg/openbox/autostart
+        dest: "{{ home_dir }}/.bash_profile"
         content: |
-          xset s off
-          xset -dpms
-          xset s noblank
+          startx
         owner: "{{ user }}"
         group: "{{ user }}"
         mode: '0755'
@@ -147,44 +149,12 @@
       register: pip_result
 
 # https://raspberrypi.stackexchange.com/a/135457 (B2 = console autologin, B4 = desktop autologin)
-    - name: enable GUI auto login
+    - name: enable console auto login
       become: true
-      ansible.builtin.command: raspi-config nonint do_boot_behaviour B4
+      ansible.builtin.command: raspi-config nonint do_boot_behaviour B2
 
 # 
     - name: set audio output to HDMI 0
       become: true
       ansible.builtin.command: raspi-config nonint do_audio 1
  
- # create a GUI system service to start the Xserver with openbox and the web interface in kiosk mode on boot
- # https://unix.stackexchange.com/a/732870
-
-    - name: Configure SimpleTV systemd service
-      copy:
-        dest: /etc/systemd/system/simpletv.service
-        content: |
-          [Unit]
-          Description=SimpleTV Gui Service
-          PartOf=graphical-session.target
-          After=graphical-session.target
-
-          [Service]
-          Type=exec
-          ExecStart={{ simpletv_dir }}/.venv/bin/python simpletv.py
-          Environment=DISPLAY=:0
-          WorkingDirectory={{ simpletv_dir }}
-          Restart=always
-          User={{ user }}
-
-          [Install]
-          WantedBy=graphical-session.target
-
-
-
-    - name: Enable SimpleTV service
-      systemd:
-        name: simpletv.service
-        enabled: yes
-        state: started
-
-
