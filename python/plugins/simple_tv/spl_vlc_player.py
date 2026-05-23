@@ -76,6 +76,17 @@ class SplPlugin(SplThread):
             print("Received request to switch to videotext page:", page)
             if self.player:
                 self.player.video_set_teletext(page)
+        if queue_event.type == defaults.MSG_INPUT_SPECIAL:
+            input_special = queue_event.data
+            print("Received special input:", input_special)
+            # Process the special input for volume control
+            if input_special == "volup":
+                if self.player:
+                    self.player.audio_set_volume(self.player.audio_get_volume() + 10)
+            elif input_special == "voldown":
+                if self.player:
+                    self.player.audio_set_volume(self.player.audio_get_volume() - 10)
+
         # for further pocessing, do not forget to return the queue event
         return queue_event
 
