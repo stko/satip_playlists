@@ -41,6 +41,7 @@
           - x11-xserver-utils
           - xinit
           - openbox
+          - pulseaudio
         state: present
 
 #  Kiosk mode via systemd didn't work, so we will use the startx method instead, which is more reliable and easier to set up, but it requires a user to be logged in, so we will set up auto login for the user pi, and then startx will be executed on login, which will start the Xserver and the web interface in kiosk mode
@@ -83,6 +84,26 @@
         group: "{{ user }}"
         mode: '0755'
 
+
+    - name: Disable Power Off Keyboard Shortcut to prevent accidental shutdowns through the remote control
+      become: true
+      community.general.ini_file:
+        path: /etc/systemd/logind.conf
+        section: Login
+        option: HandlePowerKey
+        value: ignore
+        state: present
+
+    - name: Insert/Update pulse audio output settings
+      become: true
+
+      ansible.builtin.blockinfile:
+        path: /etc/pulse/default.pa
+        append_newline: true
+        prepend_newline: true
+        block: |
+          set-default-sink 1
+          set-sink-port 1 hdmi-output-0
 
 
     - name: ensures {{ simpletv_dir }} dir exists
@@ -164,8 +185,8 @@
       become: true
       ansible.builtin.command: raspi-config nonint do_boot_behaviour B2
 
-# 
-    - name: set audio output to HDMI 0
-      become: true
-      ansible.builtin.command: raspi-config nonint do_audio 1
+#  not usable anymore, just create error message because pulseaudio is in use and the audio output is set to HDMI 0, so we don't need to set it again, and setting it again would cause an error because pulseaudio is in use, so we will just create an error message to inform the user that the audio output is already set to HDMI 0 and that they don't need to set it again
+    # - name: set audio output to HDMI 0
+    #   become: true
+    #   ansible.builtin.command: raspi-config nonint do_audio 1
  
