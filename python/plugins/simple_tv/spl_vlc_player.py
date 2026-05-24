@@ -108,6 +108,7 @@ class SplPlugin(SplThread):
                         self.player is None
                     ):  # create a new player instance for each new URL, as VLC is not thread safe
                         self.player = self.vlc_instance.media_player_new()
+                        self.player.set_fullscreen(True)
                     else:
                         # self.player.pause()  # pause current playback
                         self.player.stop()
