@@ -51,7 +51,18 @@
         dest: "{{ home_dir }}/.xinitrc"
         content: |
           #!/bin/sh
-          #exec openbox-session
+          exec openbox-session
+        owner: "{{ user }}"
+        group: "{{ user }}"
+        mode: '0755'
+
+    - name: Create openbox autostart file for user {{ user }}
+      copy:
+        dest: /etc/xdg/openbox/autostart
+        content: |
+          xset s off
+          xset -dpms
+          xset s noblank
           while true; do
             cd /home/pi/simpletv
             export DISPLAY=:0
