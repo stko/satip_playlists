@@ -77,3 +77,34 @@ https://pypi.org/project/python-vlc/
 
 ein paar Infos zu den cli- Parametern: https://forums.raspberrypi.com/viewtopic.php?t=386007
 
+
+
+## CEC - Support
+
+Install instruction for libCEC version 4.0.0
+
+(Original verändert beim Packet python-dev -> python3-dev)
+
+https://forums.raspberrypi.com/viewtopic.php?t=70923#p1088994
+
+    sudo apt-get update
+    sudo apt-get install cmake libudev-dev libxrandr-dev python3-dev swig
+    cd
+    git clone https://github.com/Pulse-Eight/platform.git
+    mkdir platform/build
+    cd platform/build
+    cmake ..
+    make
+    sudo make install
+    cd
+    git clone https://github.com/Pulse-Eight/libcec.git
+    mkdir libcec/build
+    cd libcec/build
+    cmake -DRPI_INCLUDE_DIR=/opt/vc/include -DRPI_LIB_DIR=/opt/vc/lib ..
+    make -j4
+    sudo make install
+    sudo ldconfig
+
+
+
+    Probleme mit der CEC Erkennung? Try https://github.com/Pulse-Eight/libcec/tree/master#raspberry-pi

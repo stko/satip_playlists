@@ -79,6 +79,8 @@ class SplPlugin(SplThread):
                 self.switch_station(input_num)
             else:
                 self.switch_videotext_page(input_num)
+        if queue_event.type == defaults.MSG_TVCONTROL_POWER_ON:
+            self.switch_station(self.channel)
         if queue_event.type == defaults.MSG_INPUT_SPECIAL:
             input_special = queue_event.data
             print("Received special input:", input_special)

@@ -76,14 +76,17 @@ class SplPlugin(SplThread):
             print("Received request to switch to videotext page:", page)
             if self.player:
                 self.player.video_set_teletext(page)
+        if queue_event.type == defaults.MSG_TVCONTROL_POWER_OFF:
+            if self.player:
+                self.player.stop()
         if queue_event.type == defaults.MSG_INPUT_SPECIAL:
             input_special = queue_event.data
             print("Received special input:", input_special)
             # Process the special input for volume control
-            if input_special == "volup":
+            if input_special == "volup" or input_special == "up":
                 if self.player:
                     self.player.audio_set_volume(self.player.audio_get_volume() + 10)
-            elif input_special == "voldown":
+            elif input_special == "voldown" or input_special == "down":
                 if self.player:
                     self.player.audio_set_volume(self.player.audio_get_volume() - 10)
 

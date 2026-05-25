@@ -42,6 +42,8 @@
           - xinit
           - openbox
           - pulseaudio
+          - libcec7
+          - cec-utils
         state: present
 
 #  Kiosk mode via systemd didn't work, so we will use the startx method instead, which is more reliable and easier to set up, but it requires a user to be logged in, so we will set up auto login for the user pi, and then startx will be executed on login, which will start the Xserver and the web interface in kiosk mode
