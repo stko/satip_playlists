@@ -4,6 +4,8 @@
 WEB_ROOT_DIR = "../static"
 
 # all the different message types
+MSG_SYSTEM_READY = "systemready"
+MSG_SYSTEM_SHUTDOWN = "systemshutdown"
 MSG_SOCKET_CONNECT = "wsconnect"
 MSG_SOCKET_CLOSE = "wsclose"
 MSG_SOCKET_MSG = "wsmsg"  # outgoing message to the Browser

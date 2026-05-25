@@ -20,12 +20,14 @@ ScriptPath = os.path.realpath(os.path.join(os.path.dirname(__file__), "./common"
 sys.path.append(os.path.abspath(ScriptPath))
 # own local modules
 from jsonstorage import JsonStorage
+import defaults
 
 
 class PluginManager:
     """loads all simpleTV plugins"""
 
     def __init__(self, modref, plugin_root_dir):
+        self.modref = modref
         self.origin_dir = os.path.dirname(__file__)
         self.config = JsonStorage(
             "PluginManager", "backup", "plugins.json", {"plugins": {}}
@@ -68,6 +70,11 @@ class PluginManager:
             # finally run all active modules
             for instance in self.plugins.values():
                 instance.run()
+            self.modref.message_handler.queue_event(
+                None,
+                defaults.MSG_SYSTEM_READY,
+                None,
+            )
         except Exception as e:
             print("Can't load plugin " + str(e))
             traceback.print_exc(file=sys.stdout)
