@@ -54,6 +54,7 @@ class SplPlugin(SplThread):
             },
         )  # set defaults
         self.stations = {}
+        self.playlists = {}
         self.last_update = 0
         self.lock = threading.Lock()  # create a lock, only if necessary
 
@@ -74,20 +75,18 @@ class SplPlugin(SplThread):
             msg_type = browser_message.get("type", "")
             msg_data = browser_message.get("config", {})
             if msg_type == "tvcontrol_get_list":
-                playlists = self.movielist_storage.read("playlists", [])
+                self.refresh_streaming_data()
                 if "room" not in msg_data:
-                    browser_message = {"rooms": list(playlists.keys())}
+                    browser_message = {"rooms": list(self.playlists.keys())}
                 else:
                     room_name = msg_data["room"]
-                    if room_name in playlists:
-                        sources = self.movielist_storage.read("sources", [])
-                        stations = self.collect_urls(sources)
+                    if room_name in self.playlists:
                         final_m3u = self.playlist(
-                            stations, playlists[room_name], "json"
+                            self.stations, self.playlists[room_name], "json"
                         )
                         browser_message = {"livetv": final_m3u}
                     else:
-                        browser_message = {"rooms": list(playlists.keys())}
+                        browser_message = {"rooms": list(self.playlists.keys())}
                 self.modref.message_handler.queue_event(
                     queue_event.user,
                     defaults.MSG_SOCKET_MSG,
@@ -102,20 +101,23 @@ class SplPlugin(SplThread):
         if queue_event.type == defaults.QUERY_PLAYLIST:  # wait for defined messages
             name = queue_event.params["name"].lower()
             list_format = queue_event.params["format"]
-            sources = self.movielist_storage.read("sources", [])
-            playlists = self.movielist_storage.read("playlists", [])
+            self.refresh_streaming_data()
+            if (
+                name == "domain"
+            ):  # return the whole domain data, including stations and playlists, so that the caller can do the filtering and formatting
+                domain_data = {"stations": self.stations, "playlists": self.playlists}
+                return [json.dumps(domain_data, indent=4)]
             if name == "stations":  # return
-                stations = self.collect_urls(sources)
-                station_names = list(stations.keys())
+                station_names = list(self.stations.keys())
                 station_names.sort()
                 return [json.dumps({"stations": station_names}, indent=4)]
             elif name == "all":  # return
-                stations = self.collect_urls(sources)
-                final_m3u = self.format_m3u(stations, {})
+                final_m3u = self.format_m3u(self.stations, {})
                 return [final_m3u]
-            elif name in playlists:
-                stations = self.collect_urls(sources)
-                final_m3u = self.playlist(stations, playlists[name], list_format)
+            elif name in self.playlists:
+                final_m3u = self.playlist(
+                    self.stations, self.playlists[name], list_format
+                )
                 return [final_m3u]
         return ["unknown playlist"]
 
@@ -131,10 +133,29 @@ class SplPlugin(SplThread):
 
     # ------ plugin specific routines
 
-    def collect_urls(self, sources: list) -> dict:
+    def refresh_streaming_data(self):
         new_stations = {}
-        if self.stations and (time.time() - self.last_update) < 3600:  # 1 hour cache
-            return self.stations
+        domain_server = self.movielist_storage.read("domainserver", "")
+        if domain_server:  # we pull the data from a domain server
+            r = requests.get(domain_server)
+
+            print("Status Code:")
+            print(r.status_code)
+            if r.status_code != 200:
+                return
+            domain_data = r.json()
+            if "stations" in domain_data:
+                self.stations = domain_data["stations"]
+            if "playlists" in domain_data:
+                self.playlists = domain_data["playlists"]
+        self.playlists = self.movielist_storage.read("playlists", [])
+
+        if (
+            self.stations and (time.time() - self.last_update) < 3600 * 24
+        ):  # 24 hour cache
+            return
+        sources = self.movielist_storage.read("sources", [])
+
         self.last_update = time.time()
         for source in sources:
             r = requests.get(source)
@@ -161,7 +182,6 @@ class SplPlugin(SplThread):
                     url = line
                     new_stations[name] = {"station": station, "url": url}
             self.stations = new_stations
-        return new_stations
 
     def playlist(
         self, stations: dict, playlist_data: dict, format: str = "m3u"
@@ -181,9 +201,16 @@ class SplPlugin(SplThread):
                 replaced_url_station["name"] = name.title()
                 filtered_stations[name.title()] = replaced_url_station
         if format == "json":
-            return filtered_stations
+            return self.format_json(filtered_stations, playlist_data)
         else:
             return self.format_m3u(filtered_stations, playlist_data)
+
+    def format_json(self, stations: dict, playlist_data: dict) -> dict:
+        new_m3u = ["#EXTM3U"]
+        for station_data in stations.values():
+            if "adds" in playlist_data:
+                station_data["adds"] = playlist_data["adds"]
+        return stations
 
     def format_m3u(self, stations: dict, playlist_data: dict) -> str:
         new_m3u = ["#EXTM3U"]

@@ -23,7 +23,6 @@ from io import StringIO
 from splthread import SplThread
 import defaults
 
-
 # Add the directory containing your module to the Python path (wants absolute paths)
 
 ScriptPath = os.path.realpath(os.path.join(os.path.dirname(__file__), "../common"))
@@ -127,11 +126,19 @@ class SplPlugin(SplThread):
 
         @self.app.route("/room/<path:name>/")
         def playlist(name):
+            format = request.args.get("format", "m3u")
             playlist = self.modref.message_handler.query(
-                Query(None, defaults.QUERY_PLAYLIST, {"name": name, "format": "m3u"})
+                Query(None, defaults.QUERY_PLAYLIST, {"name": name, "format": format})
             )
             if playlist:
-                return Response(playlist[0], mimetype="text/plain")
+                if format == "m3u":
+                    mimetype = "text/plain"
+                    result_str = playlist[0]
+                else:
+                    mimetype = "application/json"
+                    result_str = json.dumps(playlist[0])
+                return Response(result_str, mimetype=mimetype)
+
             return ""
 
     def on_create_ws_socket(self, ws):
