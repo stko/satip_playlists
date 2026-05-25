@@ -62,9 +62,14 @@ class SplPlugin(SplThread):
                 else:
                     self.keymap[keycode] = {"isascii": False, "key": value["key"]}
         # open file in binary mode
-        self.in_file = open(self.configuration.read("input_device"), "rb")
-        os.set_blocking(self.in_file.fileno(), False)
-        self.event = self.in_file.read(self.EVENT_SIZE)
+        self.in_file = None
+        self.event = None
+        try:
+            self.in_file = open(self.configuration.read("input_device"), "rb")
+            os.set_blocking(self.in_file.fileno(), False)
+            self.event = self.in_file.read(self.EVENT_SIZE)
+        except Exception as e:
+            print(f"Error occurred while opening input device: {e}")
         self.time_ticker = time.time()
         self.input_buffer = ""
         # self.lock = threading.Lock()  # create a lock, only if necessary
@@ -136,8 +141,10 @@ class SplPlugin(SplThread):
                         self.input_buffer,
                     )
                     self.input_buffer = ""
-            self.event = self.in_file.read(self.EVENT_SIZE)
-        self.in_file.close()
+            if self.in_file:
+                self.event = self.in_file.read(self.EVENT_SIZE)
+        if self.in_file:
+            self.in_file.close()
 
     def _stop(self):
         self.run_flag = False
