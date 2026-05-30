@@ -5,7 +5,7 @@ WORKDIR /app
 # generate Web certificate
 RUN apt-get update && \
     apt-get install -y openssl && \
-     mkdir -p python && \
+    mkdir -p python && \
     openssl req -newkey rsa:2048 -new -nodes -x509 \
     -days 3650 -subj "/C=DE/ST=Brake/L=lower Saxony/O=stko/OU=IT Department/CN=koehlers.de" \
     -keyout python/key.pem -out python/server.pem
@@ -29,7 +29,7 @@ RUN bash -c "/tmp/installdockers.sh"
 
 WORKDIR /app/python
 
-CMD [ "python3", "./simple_tv.py"  ]
+CMD [ "python3", "./simpletv.py"  ]
 
 
 EXPOSE 8000
