@@ -137,17 +137,21 @@ class SplPlugin(SplThread):
         new_stations = {}
         domain_server = self.movielist_storage.read("domainserver", "")
         if domain_server:  # we pull the data from a domain server
-            r = requests.get(domain_server)
+            try:
+                r = requests.get(domain_server)
 
-            print("Status Code:")
-            print(r.status_code)
-            if r.status_code != 200:
+                print("Status Code:")
+                print(r.status_code)
+                if r.status_code != 200:
+                    return
+                domain_data = r.json()
+                if "stations" in domain_data:
+                    self.stations = domain_data["stations"]
+                if "playlists" in domain_data:
+                    self.playlists = domain_data["playlists"]
+            except Exception as e:
+                print("Error fetching domain data:", e)
                 return
-            domain_data = r.json()
-            if "stations" in domain_data:
-                self.stations = domain_data["stations"]
-            if "playlists" in domain_data:
-                self.playlists = domain_data["playlists"]
         self.playlists = self.movielist_storage.read("playlists", [])
 
         if (
@@ -158,30 +162,34 @@ class SplPlugin(SplThread):
 
         self.last_update = time.time()
         for source in sources:
-            r = requests.get(source)
+            try:
+                r = requests.get(source)
 
-            print("Status Code:")
-            print(r.status_code)
-            if r.status_code != 200:
+                print("Status Code:")
+                print(r.status_code)
+                if r.status_code != 200:
+                    continue
+
+                station = ""
+                name = ""
+                # print (r.text)
+                lines = r.text.split("\n")
+                for line in lines:
+                    line = line.strip()
+                    if line[:1] == "#":
+                        # print(line)
+                        elements = line.split(",", 1)
+                        if len(elements) < 2:
+                            continue
+                        name = elements[1].strip().lower()
+                        station = line
+                    else:
+                        url = line
+                        new_stations[name] = {"station": station, "url": url}
+                self.stations = new_stations
+            except Exception as e:
+                print("Error fetching station data:", e)
                 continue
-
-            station = ""
-            name = ""
-            # print (r.text)
-            lines = r.text.split("\n")
-            for line in lines:
-                line = line.strip()
-                if line[:1] == "#":
-                    # print(line)
-                    elements = line.split(",", 1)
-                    if len(elements) < 2:
-                        continue
-                    name = elements[1].strip().lower()
-                    station = line
-                else:
-                    url = line
-                    new_stations[name] = {"station": station, "url": url}
-            self.stations = new_stations
 
     def playlist(
         self, stations: dict, playlist_data: dict, format: str = "m3u"
