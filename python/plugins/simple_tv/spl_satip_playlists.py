@@ -74,12 +74,13 @@ class SplPlugin(SplThread):
             print("browser message:", browser_message)
             msg_type = browser_message.get("type", "")
             msg_data = browser_message.get("config", {})
-            if msg_type == "tvcontrol_get_list":
+            if msg_type == defaults.MSG_TVCONTROL_GET_LIST:
                 self.refresh_streaming_data()
                 if "room" not in msg_data:
                     browser_message = {"rooms": list(self.playlists.keys())}
                 else:
-                    room_name = msg_data["room"]
+                    room_name = msg_data["room"].lower()
+                    self.refresh_streaming_data(room_name)
                     if room_name in self.playlists:
                         final_m3u = self.playlist(
                             self.stations, self.playlists[room_name], "json"
@@ -101,7 +102,7 @@ class SplPlugin(SplThread):
         if queue_event.type == defaults.QUERY_PLAYLIST:  # wait for defined messages
             name = queue_event.params["name"].lower()
             list_format = queue_event.params["format"]
-            self.refresh_streaming_data()
+            self.refresh_streaming_data(name)
             if (
                 name == "domain"
             ):  # return the whole domain data, including stations and playlists, so that the caller can do the filtering and formatting
@@ -119,7 +120,8 @@ class SplPlugin(SplThread):
                     self.stations, self.playlists[name], list_format
                 )
                 return [final_m3u]
-        return ["unknown playlist"]
+            return ["unknown playlist"]
+        return []
 
     def _run(self):
         """starts the server"""
@@ -133,25 +135,31 @@ class SplPlugin(SplThread):
 
     # ------ plugin specific routines
 
-    def refresh_streaming_data(self):
+    def refresh_streaming_data(self, name=None):
         new_stations = {}
         domain_server = self.movielist_storage.read("domainserver", "")
         if domain_server:  # we pull the data from a domain server
+            if not name:
+                name_array = self.modref.message_handler.query(
+                    Query(None, defaults.QUERY_ROOM_NAME, {})
+                )
+                if name_array:
+                    name = name_array[0]
             try:
-                r = requests.get(domain_server)
+                domain_server_with_name = domain_server.replace("{room}", name)
+                r = requests.get(domain_server_with_name)
 
                 print("Status Code:")
                 print(r.status_code)
                 if r.status_code != 200:
                     return
                 domain_data = r.json()
-                if "stations" in domain_data:
-                    self.stations = domain_data["stations"]
-                if "playlists" in domain_data:
-                    self.playlists = domain_data["playlists"]
+                self.stations = {}
+                self.playlists[name] = domain_data
+                self.stations = list(domain_data.keys())
             except Exception as e:
                 print("Error fetching domain data:", e)
-                return
+            return
         self.playlists = self.movielist_storage.read("playlists", [])
 
         if (
@@ -194,6 +202,16 @@ class SplPlugin(SplThread):
     def playlist(
         self, stations: dict, playlist_data: dict, format: str = "m3u"
     ) -> str | dict:
+        domain_server = self.movielist_storage.read("domainserver", "")
+        if domain_server:  # we pull the data from a domain server
+            name_array = self.modref.message_handler.query(
+                Query(None, defaults.QUERY_ROOM_NAME, {})
+            )
+            name = ""
+            if name_array:
+                name = name_array[0]
+            return self.playlists[name]
+
         filtered_stations = {}
         for name in playlist_data["stations"]:
             name = name.lower()

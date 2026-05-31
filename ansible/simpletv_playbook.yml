@@ -43,6 +43,7 @@
           - openbox
           - pulseaudio
           - libcec7
+          - libcec-dev
           - cec-utils
         state: present
 

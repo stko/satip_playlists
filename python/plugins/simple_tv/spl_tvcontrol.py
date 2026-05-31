@@ -124,8 +124,9 @@ class SplPlugin(SplThread):
 
     def query_handler(self, queue_event, max_result_count) -> list:
         # print("satipplaylists handler query handler",queue_event.type, queue_event.user, max_result_count, queue_event.params)
-        if queue_event.type == defaults.MSG_SOCKET_xxx:  # wait for defined messages
-            pass
+        if queue_event.type == defaults.QUERY_ROOM_NAME:
+            room_name = self.configuration.read("room", "wohnzimmer")
+            return [room_name]
         return []
 
     def _run(self):
