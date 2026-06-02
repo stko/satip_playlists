@@ -8,7 +8,7 @@
 # Posted by Treviño, modified by community. See post 'Timeline' for change history
 # Retrieved 2026-05-01, License - CC BY-SA 4.0
 
-import os
+import subprocess
 import time
 
 # Non standard modules (install with pip)
@@ -67,6 +67,7 @@ class SplPlugin(SplThread):
                         defaults.MSG_TVCONTROL_POWER_OFF,
                         None,
                     )
+                    self.send_command("standby 0")
                     self.tv_on = False
                     print("Turning TV off")
                 else:
@@ -75,6 +76,7 @@ class SplPlugin(SplThread):
                         defaults.MSG_TVCONTROL_POWER_ON,
                         None,
                     )
+                    self.send_command("on 0")
                     self.tv_on = True
                     print("Turning TV on")
 
@@ -96,3 +98,19 @@ class SplPlugin(SplThread):
         self.run_flag = False
 
     # ------ plugin specific routines
+    def send_command(self, cmd: str) -> str:
+        # following the example from https://gist.github.com/rmtsrc/dc35cd1458cd995631a4f041ab11ff74
+
+        # Run 'echo "scan"' and pipe the output to 'cec-client'
+        ps_cmd = subprocess.Popen(["echo", cmd], stdout=subprocess.PIPE)
+
+        # Run 'cec-client' and pipe the output of 'echo' to it
+        head_cmd = subprocess.Popen(
+            ["cec-client", "-s", "-d", "1"],
+            stdin=ps_cmd.stdout,
+            stdout=subprocess.PIPE,
+            encoding="utf-8",
+        )
+
+        stdout, stderr = head_cmd.communicate()
+        return stdout
