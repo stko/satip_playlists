@@ -91,6 +91,8 @@ class SplPlugin(SplThread):
 
     def _run(self):
         """starts the server"""
+        # the inital scan seems to be necessary to get the cec-client running and responsive
+        self.send_command("scan")
         while self.run_flag:
             time.sleep(0.1)
 

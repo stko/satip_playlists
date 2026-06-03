@@ -47,6 +47,10 @@
           - cec-utils
         state: present
 
+
+# cec works out of the box with the Raspberry Pi, but we can compile it from source if needed https://github.com/Pulse-Eight/libcec/blob/master/docs/README.raspberrypi.md#compilation-using-the-old-raspberry-pi-driver
+
+
 #  Kiosk mode via systemd didn't work, so we will use the startx method instead, which is more reliable and easier to set up, but it requires a user to be logged in, so we will set up auto login for the user pi, and then startx will be executed on login, which will start the Xserver and the web interface in kiosk mode
 # https://superuser.com/q/1645902
 

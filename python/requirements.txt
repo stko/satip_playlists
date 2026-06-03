@@ -7,4 +7,3 @@ requests
 setuptools
 urllib3
 Werkzeug
-pyCEC
