@@ -61,6 +61,11 @@ class SplPlugin(SplThread):
             print("Received special input:", input_special)
             # Process the special input power on/off and toggle the TV state
             if input_special == "power":
+                tv_state_response = self.send_command("pow 0")
+                if "power status: on" in tv_state_response:
+                    self.tv_on = True
+                elif "power status: standby" in tv_state_response:
+                    self.tv_on = False
                 if self.tv_on:
                     self.modref.message_handler.queue_event(
                         None,
