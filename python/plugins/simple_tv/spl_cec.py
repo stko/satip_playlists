@@ -9,6 +9,7 @@
 # Retrieved 2026-05-01, License - CC BY-SA 4.0
 
 import subprocess
+import threading
 import time
 
 # Non standard modules (install with pip)
@@ -39,7 +40,7 @@ class SplPlugin(SplThread):
             },
         )  # set defaults
         self.tv_on = False
-        # self.lock = threading.Lock()  # create a lock, only if necessary
+        self.lock = threading.Lock()  # create a lock, only if necessary
 
         # at last announce the own plugin
         super().__init__(modref.message_handler, self)
@@ -61,18 +62,13 @@ class SplPlugin(SplThread):
             print("Received special input:", input_special)
             # Process the special input power on/off and toggle the TV state
             if input_special == "power":
-                tv_state_response = self.send_command("pow 0")
-                if "power status: on" in tv_state_response:
-                    self.tv_on = True
-                elif "power status: standby" in tv_state_response:
-                    self.tv_on = False
                 if self.tv_on:
                     self.modref.message_handler.queue_event(
                         None,
                         defaults.MSG_TVCONTROL_POWER_OFF,
                         None,
                     )
-                    self.send_command("standby 0")
+                    self.send_command(cmd=["as", "standby 0"])
                     self.tv_on = False
                     print("Turning TV off")
                 else:
@@ -81,7 +77,7 @@ class SplPlugin(SplThread):
                         defaults.MSG_TVCONTROL_POWER_ON,
                         None,
                     )
-                    self.send_command("on 0")
+                    self.send_command(cmd=["on 0", "as"])
                     self.tv_on = True
                     print("Turning TV on")
 
@@ -98,26 +94,40 @@ class SplPlugin(SplThread):
         """starts the server"""
         # the inital scan seems to be necessary to get the cec-client running and responsive
         self.send_command("scan")
+        self.send_command(
+            ["on 0", "as"]
+        )  # turn on the TV and set the active source to this device
         while self.run_flag:
-            time.sleep(0.1)
+            tv_state_response = self.send_command("pow 0")
+            if "power status: on" in tv_state_response:
+                self.tv_on = True
+            elif "power status: standby" in tv_state_response:
+                self.tv_on = False
+            time.sleep(5)  # check the TV state every 5 seconds
 
     def _stop(self):
         self.run_flag = False
 
     # ------ plugin specific routines
-    def send_command(self, cmd: str) -> str:
+    def send_command(self, cmd: str | list) -> str:
         # following the example from https://gist.github.com/rmtsrc/dc35cd1458cd995631a4f041ab11ff74
+        # added with the stdin sample https://stackoverflow.com/a/8475367/1927807
+        # and the command piping example from https://support.pulse-eight.com/support/solutions/articles/30000053030-advanced-cec-client-commands
 
-        # Run 'echo "scan"' and pipe the output to 'cec-client'
-        ps_cmd = subprocess.Popen(["echo", cmd], stdout=subprocess.PIPE)
+        if isinstance(cmd, str):
+            cmd = [str(cmd)]
+        cmd += ["quit"]  # add quit command to the end of the command list
+        cmd = (
+            "\n".join(cmd) + "\n"
+        )  # join the commands into a single string with newlines
 
-        # Run 'cec-client' and pipe the output of 'echo' to it
+        # Run 'cec-client' and with cmd as input, capture the output
         head_cmd = subprocess.Popen(
-            ["cec-client", "-s", "-d", "1"],
-            stdin=ps_cmd.stdout,
+            ["cec-client", "-d", "1"],
+            stdin=subprocess.PIPE,
             stdout=subprocess.PIPE,
             encoding="utf-8",
         )
 
-        stdout, stderr = head_cmd.communicate()
+        stdout, stderr = head_cmd.communicate(input=cmd)
         return stdout
