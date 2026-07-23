@@ -81,7 +81,7 @@ class SplPlugin(SplThread):
                 self.switch_videotext_page(input_num)
         if queue_event.type == defaults.MSG_TVCONTROL_POWER_ON:
             self.switch_station(self.channel)
-        if queue_event.type == defaults.MSG_INPUT_SPECIAL:
+        if queue_event.type == defaults.MSG_KBD_INPUT_SPECIAL_KEY:
             input_special = queue_event.data
             print("Received special input:", input_special)
             # Process the special input as needed, e.g. switch to videotext mode on "enter" key

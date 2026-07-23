@@ -79,7 +79,7 @@ class SplPlugin(SplThread):
         if queue_event.type == defaults.MSG_TVCONTROL_POWER_OFF:
             if self.player:
                 self.player.stop()
-        if queue_event.type == defaults.MSG_INPUT_SPECIAL:
+        if queue_event.type == defaults.MSG_KBD_INPUT_SPECIAL_KEY:
             input_special = queue_event.data
             print("Received special input:", input_special)
             # Process the special input for volume control

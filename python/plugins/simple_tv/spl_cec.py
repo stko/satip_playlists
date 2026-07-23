@@ -56,7 +56,7 @@ class SplPlugin(SplThread):
             queue_event.user,
             queue_event.data,
         )
-        if queue_event.type == defaults.MSG_INPUT_SPECIAL:
+        if queue_event.type == defaults.MSG_KBD_INPUT_SPECIAL_KEY:
             input_special = queue_event.data
             print("Received special input:", input_special)
             # Process the special input power on/off and toggle the TV state

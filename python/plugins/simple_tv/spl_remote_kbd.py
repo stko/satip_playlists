@@ -121,7 +121,7 @@ class SplPlugin(SplThread):
                                 print("\nspecial: " + key_info["key"], flush=True)
                                 self.modref.message_handler.queue_event(
                                     None,
-                                    defaults.MSG_INPUT_SPECIAL,
+                                    defaults.MSG_KBD_INPUT_SPECIAL_KEY,
                                     key_info["key"],
                                 )
                     else:
