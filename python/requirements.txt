@@ -7,3 +7,4 @@ requests
 setuptools
 urllib3
 Werkzeug
+gpiozero

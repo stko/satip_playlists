@@ -11,7 +11,8 @@
     simpletv_dir: "{{ home_dir }}/simpletv"
     docker_compose_version: "v2.23.3"
     ansible_python_interpreter: /usr/bin/python3
-
+    # Pin 5 (GPIO 3) is the default pin for the gpio-shutdown overlay
+    button_gpio_pin: 3
 
   tasks:
 
@@ -197,3 +198,27 @@
     #   become: true
     #   ansible.builtin.command: raspi-config nonint do_audio 1
  
+    - name: Create the reboot script for the GPIO button
+      become: true
+      copy:
+        dest: "/etc/systemd/system/raspireboot.service"
+        content: |
+          [Unit]
+          Description=Raspi GPIO Button Reboot Service
+          After=network.target
+
+          [Service]
+          ExecStart={{ simpletv_dir }}/.venv/bin/python raspi_reboot.py
+          WorkingDirectory={{ simpletv_dir }}
+          Restart=always
+
+          [Install]
+          WantedBy=multi-user.target
+
+    - name: Enable and start services
+      systemd:
+        name: "{{ item }}"
+        enabled: yes
+        state: started
+      loop:
+        - raspireboot.service    
