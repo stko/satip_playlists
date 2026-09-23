@@ -20,7 +20,7 @@
     - name: Update & upgrade packages
       apt:
         update_cache: yes
-        upgrade: dist
+        upgrade: no
         cache_valid_time: 3600
 
 
