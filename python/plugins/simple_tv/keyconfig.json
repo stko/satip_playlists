@@ -1,33 +1,63 @@
 {
-    "2": {
+    "82": {
         "isascii": true,
-        "key": "1234567890"
+        "key": "0"
     },
-    "14": {
+    "79": {
+        "isascii": true,
+        "key": "1"
+    },
+    "80": {
+        "isascii": true,
+        "key": "2"
+    },
+    "81": {
+        "isascii": true,
+        "key": "3"
+    },
+    "75": {
+        "isascii": true,
+        "key": "4"
+    },
+    "76": {
+        "isascii": true,
+        "key": "5"
+    },
+    "77": {
+        "isascii": true,
+        "key": "6"
+    },
+    "71": {
+        "isascii": true,
+        "key": "7"
+    },
+    "72": {
+        "isascii": true,
+        "key": "8"
+    },
+    "73": {
+        "isascii": true,
+        "key": "9"
+    },
+    "83": {
         "key": "backspace"
     },
-    "103": {
-        "key": "up"
-    },
-    "108": {
-        "key": "down"
-    },
-    "105": {
+    "98": {
         "key": "left"
     },
-    "106": {
+    "55": {
         "key": "right"
     },
-    "104": {
+    "78": {
         "key": "volup"
     },
-    "109": {
+    "74": {
         "key": "voldown"
     },
-    "116": {
+    "14": {
         "key": "power"
     },
-    "127": {
+    "96": {
         "key": "videotext"
     }
 }
